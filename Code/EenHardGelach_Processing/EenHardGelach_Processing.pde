@@ -1,6 +1,4 @@
-
 import ddf.minim.*;
-
 import processing.serial.*;
 import spacebrew.*;
 //import processing.sound.*;
@@ -24,7 +22,6 @@ boolean is_playing = false;
 String server="54.93.57.201";
 String name="Sander";
 String description ="Client that sends and receives boolean messages. Background turns yellow when message received.";
-// SoundFile file;
 Spacebrew sb;
 
 void setup() {
@@ -40,18 +37,13 @@ void setup() {
   // is always my  FTDI adaptor, so I open Serial.list()[0].
   // On Windows machines, this generally opens COM1.
   // Open whatever port is the one you're using.
-  String portName = Serial.list()[0];
-  myPort = new Serial(this, portName, 115200);
-  sb.addPublish( "button_pressed", "boolean", false );  
-  sb.addSubscribe( "change_led", "boolean" );
-
-
-  // sb.addSubscribe( "change_LED", "boolean" );
-  // connect to spacebre<
-  sb.connect(server, name, description );
-  // file = new SoundFile(this, "C:\\Users\\Sander\\Documents\\++ School\\Public Play\\pvcsoundgame\\pvcsoundgame_v1\\testloop.wav");
-  minim = new Minim(this);
-  groove = minim.loadFile("C:\\Users\\Sander\\Documents\\++ School\\Public Play\\pvcsoundgame\\pvcsoundgame_v1\\gelach2.mp3", 2048);
+  String portName = Serial.list()[0]; // zet in portName de verschillende beschikbare poorten (meestal maar één poort)
+  myPort = new Serial(this, portName, 115200); // stop in myPort de nodige informatie om seriële verbinding tot stand te brengen
+  sb.addPublish( "button_pressed", "boolean", false );  // de zender stuurt een signaal bij het event "button_pressed"
+  sb.addSubscribe( "change_led", "boolean" ); // de ontvanger voert 'change_led' uit als die iets ontvangt
+  sb.connect(server, name, description ); // connecteer met de spacebrew server
+  minim = new Minim(this); // nieuwe instantie van mimim geluidsbib.
+  groove = minim.loadFile("C:\\Users\\Sander\\Documents\\++ School\\Public Play\\pvcsoundgame\\pvcsoundgame_v1\\gelach2.mp3", 2048); // pad naar geluidsbestand
 }
 
 void draw() {
@@ -70,36 +62,30 @@ void draw() {
 void serialEvent(Serial myPort) {
   int inByte = myPort.read();
   myPort.write('A'); // maak een verbinding met arduino en stuur een letter A. Als arduino de letter A ontvangt controleert hij deze en is er een verbinding tot stand gekomen
-  if (inByte == 255 ) {
-    // myPort.write('G');
+  if (inByte == 255 ) { // als er iets binnen komt dan sb.send
     sb.send( "button_pressed", true );
     println("sb.send: button pressed is true");
-    //text("Click Me", width/2, height/2 + 12);
-  } else {
-    // myPort.write('R');
-    sb.send( "button_pressed", false );
+
+  } else { // doe niets
+    sb.send( "button_pressed", false ); 
     println("sd.send: button pressed is false");
-    //text("That Feels Good", width/2, height/2 + 12);
   }
 }
 
 
 void onBooleanMessage( String name, boolean value ) {
-// als het liedje aan het spelen is, wacht met de if uit te voeren, pas vanaf het moment dat het liedje klaar is met spelen maar de if opnieuw uitgevoerd worden en zal het liedjes opnieuw afgespeeld worden. Hetzelfde voor de ledview.
+// als het liedje aan het spelen is, wacht met de if uit te voeren, pas vanaf het moment dat het liedje klaar is met spelen zal de if opnieuw uitgevoerd worden en zal het liedjes opnieuw afgespeeld worden. Hetzelfde voor de ledview.
   println("got bool message " + name + " : " + value); 
-  if (name.equals("change_led") && is_playing == false) {
+  if (name.equals("change_led")) { 
     println("got bool message " + name + " : " + value); 
-    // update background color
     if (value == true) {
-
-      if (!groove.isPlaying()) {
+      if (!groove.isPlaying()) { // als hij niet speelt, stuur een P naar arduino en speel het liedje af
         currentColor = color_on; 
         myPort.write('P');
         groove.rewind();
         groove.play();
- 
       }
-    } else {
+    } else { // reset naar de kleur rood
       currentColor = color_off;
       myPort.write('R');
     }

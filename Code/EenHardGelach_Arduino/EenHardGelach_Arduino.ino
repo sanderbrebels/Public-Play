@@ -4,27 +4,23 @@
 #endif
 // adafruit libary is nodig om de neonpixel lichtjes aan te sturen. Deze kan je vinden op de website van AdaFruit
 #define PIN            7 // de pin van adafruit op digitale poort 7
-#define NUMPIXELS      50
+#define NUMPIXELS      50 // aantal led lichtjes
 Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800);
 
-// Alle gedeclareerde variabelen
+// alle gedeclareerde variabelen
 
-volatile byte state = LOW;
-int firstSensor = 0;    // first analog sensor
-int secondSensor = 0;   // second analog sensor
-int thirdSensor = 0;    // digital sensor
-int inByte = 0;         // incoming serial byte
+volatile byte state = LOW; // geen stroom
+int thirdSensor = 0;    // digitale sensor
+int inByte = 0;         // inkomende seriële byte
 
-int knobvalue;
-int potpin = 0;
-
-int buttonState = 0;         // current state of the button
-int lastButtonState = 0;     // previous state of the button
-const int  buttonPin = 4;
+int buttonState = 0;         // huidige status van de knop
+int lastButtonState = 0;     // vorige status van de knop
+// const int  buttonPin = 4;   // deze heb je nodig als je zonder interrupts werkt
 
 void setup() {
   attachInterrupt(0, sendData, CHANGE ); // 0 staat voor digitale pin 2. Deze is nodig om tegen digitale pin 2 te zeggen dat de status is veranderd. Het verhelpt het timingsprobleem. Hierdoor kan er gelijktijdig gecommuniceerd worden tussen 2 arduino's.
   // Door de delay's was het niet meer mogelijk om tegelijk te communiceren, daarom het gebruik van de interrupt.
+
   // This is for Trinket 5V 16MHz, you can remove these three lines if you are not using a Trinket
 #if defined (__AVR_ATtiny85__)
   if (F_CPU == 16000000) clock_prescale_set(clock_div_1);
@@ -58,8 +54,8 @@ void loop() {
 
 }
 
-void establishContact() { // hier wordt een seriële verbinding gemaakt met processing
-  while (Serial.available() <= 0) {
+void establishContact() { // hier wordt een seriële verbinding klaargemaakt voor de verbinding met processing
+  while (Serial.available() <= 0) { // als het kleiner of gelijk aan is dan 0, kan de seriële poort nog niet luisteren
     Serial.print('A');   // send a capital A
     delay(300);
   }
@@ -162,7 +158,8 @@ void sendData() { // controleer of de huidige status veranderd is of niet, en st
   state = !state;
   int thirdSensor = map(state, 0, 1, 0, 255);
   Serial.write(thirdSensor);
-
-
 }
+
+
+
 
